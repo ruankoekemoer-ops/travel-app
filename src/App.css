@@ -815,6 +815,11 @@ button {
   margin-bottom: 0;
 }
 
+.modal-body .error-text {
+  color: #f87171;
+  font-weight: 500;
+}
+
 .modal-footer {
   padding: 16px 24px;
   border-top: 1px solid var(--d365-border);

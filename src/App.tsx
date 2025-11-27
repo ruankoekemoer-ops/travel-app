@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { PublicClientApplication, type AccountInfo } from '@azure/msal-browser'
 
 type TravelRequestStatus = 'WAITING_FOR_QUOTE' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -177,7 +178,45 @@ function App() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [userName, setUserName] = useState('')
   const [showLogin, setShowLogin] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const msalAppRef = useRef<PublicClientApplication | null>(null)
+  const [msalReady, setMsalReady] = useState(false)
+
+  const azureClientId = import.meta.env.VITE_AZURE_CLIENT_ID
+  const azureTenantId = import.meta.env.VITE_AZURE_TENANT_ID
+
+  const applyAccount = (account: AccountInfo) => {
+    const display =
+      account.name ||
+      [account.idTokenClaims?.given_name, account.idTokenClaims?.family_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim()
+    if (display) {
+      setUserName(display)
+      setShowLogin(false)
+    }
+  }
+
+  const handleMicrosoftLogin = () => {
+    const instance = msalAppRef.current
+    if (!instance) return
+    setAuthError(null)
+    instance
+      .loginPopup({
+        scopes: ['User.Read'],
+      })
+      .then((response) => {
+        if (response.account) {
+          applyAccount(response.account)
+        }
+      })
+      .catch((err) => {
+        console.error('Login failed', err)
+        setAuthError('Microsoft sign-in failed. Please try again.')
+      })
+  }
 
   const navItems: { id: typeof tab; label: string; icon: React.ReactElement }[] = [
     { id: 'request', label: 'New request', icon: <ClipboardIcon /> },
@@ -237,6 +276,44 @@ function App() {
       setForm((prev) => ({ ...prev, employeeName: userName }))
     }
   }, [userName])
+
+  useEffect(() => {
+    if (!azureClientId || !azureTenantId) {
+      setAuthError('Azure AD configuration missing. Set VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID.')
+      setShowLogin(true)
+      setMsalReady(false)
+      return
+    }
+    if (!msalAppRef.current) {
+      msalAppRef.current = new PublicClientApplication({
+        auth: {
+          clientId: azureClientId,
+          authority: `https://login.microsoftonline.com/${azureTenantId}`,
+          redirectUri: window.location.origin,
+        },
+        cache: {
+          cacheLocation: 'localStorage',
+        },
+      })
+    }
+    msalAppRef.current
+      .initialize()
+      .then(() => {
+        setMsalReady(true)
+        const accounts = msalAppRef.current?.getAllAccounts()
+        if (accounts && accounts.length > 0) {
+          applyAccount(accounts[0])
+          setShowLogin(false)
+        } else {
+          setShowLogin(true)
+        }
+      })
+      .catch((err) => {
+        console.error('MSAL init error', err)
+        setAuthError('Unable to initialize Microsoft login.')
+        setShowLogin(true)
+      })
+  }, [azureClientId, azureTenantId])
 
   useEffect(() => {
     // Load full airport list (IATA codes) once for search
@@ -380,30 +457,18 @@ function App() {
             {showLogin ? (
               <>
                 <div className="modal-header">
-                  <h2>Welcome</h2>
+                  <h2>Sign in with Microsoft</h2>
                 </div>
                 <div className="modal-body">
-                  <p>Please sign in to continue.</p>
-                  <form
-                    className="login-form"
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      const data = new FormData(e.currentTarget)
-                      const first = (data.get('firstName') as string) || ''
-                      const last = (data.get('lastName') as string) || ''
-                      const name = `${first.trim()} ${last.trim()}`.trim()
-                      if (name) {
-                        setUserName(name)
-                        setShowLogin(false)
-                      }
-                    }}
+                  <p>Use your Microsoft 365 account to access the travel workspace.</p>
+                  {authError && <p className="error-text">{authError}</p>}
+                  <button
+                    className="primary"
+                    onClick={handleMicrosoftLogin}
+                    disabled={!msalReady || !azureClientId || !azureTenantId}
                   >
-                    <input name="firstName" placeholder="First name" required />
-                    <input name="lastName" placeholder="Last name" required />
-                    <button type="submit" className="primary">
-                      Continue
-                    </button>
-                  </form>
+                    {msalReady ? 'Sign in with Microsoft' : 'Loading Microsoft login...'}
+                  </button>
                 </div>
               </>
             ) : (
