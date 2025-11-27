@@ -427,7 +427,35 @@ textarea {
   width: 100%;
   cursor: pointer;
   padding-right: 42px;
-  background: transparent;
+  background: none;
+  color: transparent;
+  caret-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.date-field input[type='date']:focus {
+  color: transparent;
+  caret-color: transparent;
+}
+
+.date-field input[type='date']::-webkit-clear-button,
+.date-field input[type='date']::-webkit-inner-spin-button,
+.date-field input[type='date']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px;
+  opacity: 0;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+}
+
+.date-field input[type='date']::-webkit-datetime-edit {
+  opacity: 0;
+}
+
+.date-field input[type='date']::-moz-focus-inner {
+  border: 0;
 }
 
 .date-visual {
