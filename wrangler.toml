@@ -1,0 +1,16 @@
+name = "travel-requests-api"
+main = "worker/src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "TRAVEL_DB"
+database_name = "travel_requests_db"
+database_id = "509fbe5b-1438-4126-b706-fbc7a1e25d44"
+
+[[r2_buckets]]
+binding = "QUOTES_BUCKET"
+bucket_name = "travelpdf"
+
+pages_build_output_dir = "dist"
+
+
