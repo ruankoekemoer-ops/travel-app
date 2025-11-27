@@ -373,19 +373,6 @@ function App() {
 
   return (
     <div className="fo-shell">
-      <header className="fo-topbar">
-        <div className="fo-topbar-left">
-          <span className="fo-hamburger">☰</span>
-          <span className="fo-app-name">Finance and Operations</span>
-        </div>
-        <div className="fo-topbar-right">
-          <span className="fo-topbar-env">Travel workspace</span>
-          <span className="fo-topbar-icon">?</span>
-          <span className="fo-topbar-icon">🔔</span>
-          <span className="fo-topbar-icon">⚙️</span>
-          <span className="fo-topbar-user">RK</span>
-        </div>
-      </header>
       <div className={sidebarCollapsed ? 'layout collapsed' : 'layout'}>
       {(showSuccessMessage || showLogin) && (
         <div className="modal-overlay" onClick={() => setShowSuccessMessage(false)}>
