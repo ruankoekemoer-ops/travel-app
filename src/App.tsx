@@ -186,6 +186,34 @@ function App() {
     { id: 'tickets', label: 'Tickets', icon: <TicketIcon /> },
   ]
 
+  const renderDateField = (
+    field: 'startDate' | 'endDate',
+    labelText: string,
+    required = false
+  ) => (
+    <label className="date-field" key={field}>
+      <div className="date-visual">
+        <span className="date-label">{labelText}</span>
+        <span className="date-value">
+          {form[field]
+            ? new Date(form[field]).toLocaleDateString(undefined, {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+              })
+            : 'Select date'}
+        </span>
+      </div>
+      <input
+        type="date"
+        name={field}
+        value={form[field]}
+        onChange={handleChange}
+        required={required}
+      />
+    </label>
+  )
+
   useEffect(() => {
     fetch(`${API_BASE}/api/requests`)
       .then((res) => res.json())
@@ -520,136 +548,57 @@ function App() {
                   />
                 </div>
 
-                {form.travelMode === 'FLIGHT' && (
-                  <>
-                    <div className="segment">
-                      <label>Trip type</label>
-                      <div className="trip-type-row">
-                        <label className="radio-pill">
-                          <input
-                            type="radio"
-                            name="tripType"
-                            value="ONE_WAY"
-                            checked={form.tripType === 'ONE_WAY'}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, tripType: 'ONE_WAY' }))
-                            }
-                          />
-                          One-way
-                        </label>
-                        <label className="radio-pill">
-                          <input
-                            type="radio"
-                            name="tripType"
-                            value="RETURN"
-                            checked={form.tripType === 'RETURN'}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, tripType: 'RETURN' }))
-                            }
-                          />
-                          Return
-                        </label>
-                        <label className="radio-pill">
-                          <input
-                            type="radio"
-                            name="tripType"
-                            value="MULTI_LEG"
-                            checked={form.tripType === 'MULTI_LEG'}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, tripType: 'MULTI_LEG' }))
-                            }
-                          />
-                          Multi-leg
-                        </label>
-                      </div>
-                      <div className="dates-column">
-                      <label className="date-field">
+                <div className="segment">
+                  <label>{form.travelMode === 'FLIGHT' ? 'Trip type' : 'Trip direction'}</label>
+                  <div className="trip-type-row">
+                    <label className="radio-pill">
+                      <input
+                        type="radio"
+                        name="tripType"
+                        value="ONE_WAY"
+                        checked={form.tripType === 'ONE_WAY'}
+                        onChange={() =>
+                          setForm((prev) => ({ ...prev, tripType: 'ONE_WAY' }))
+                        }
+                      />
+                      One-way
+                    </label>
+                    <label className="radio-pill">
+                      <input
+                        type="radio"
+                        name="tripType"
+                        value="RETURN"
+                        checked={form.tripType === 'RETURN'}
+                        onChange={() =>
+                          setForm((prev) => ({ ...prev, tripType: 'RETURN' }))
+                        }
+                      />
+                      Return
+                    </label>
+                    {form.travelMode === 'FLIGHT' && (
+                      <label className="radio-pill">
                         <input
-                          type="date"
-                          name="startDate"
-                          value={form.startDate}
-                          onChange={handleChange}
-                          required
+                          type="radio"
+                          name="tripType"
+                          value="MULTI_LEG"
+                          checked={form.tripType === 'MULTI_LEG'}
+                          onChange={() =>
+                            setForm((prev) => ({ ...prev, tripType: 'MULTI_LEG' }))
+                          }
                         />
+                        Multi-leg
                       </label>
-                      {form.tripType !== 'ONE_WAY' && (
-                        <label className="date-field">
-                          <input
-                            type="date"
-                            name="endDate"
-                            value={form.endDate}
-                            onChange={handleChange}
-                            required
-                          />
-                        </label>
-                      )}
-                      </div>
-                    </div>
-                  </>
-                )}
+                    )}
+                  </div>
+                  <div className="dates-grid">
+                    {renderDateField('startDate', 'Depart', true)}
+                    {form.tripType !== 'ONE_WAY' &&
+                      renderDateField('endDate', 'Return', true)}
+                  </div>
+                </div>
 
                 {form.travelMode === 'LOCAL' && (
                   <>
-                    <div className="segment">
-                      <label>Local trip</label>
-                      <div className="trip-type-row">
-                        <label className="radio-pill">
-                          <input
-                            type="radio"
-                            name="localTripType"
-                            value="ONE_WAY"
-                            checked={form.tripType === 'ONE_WAY'}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, tripType: 'ONE_WAY' }))
-                            }
-                          />
-                          One-way
-                        </label>
-                        <label className="radio-pill">
-                          <input
-                            type="radio"
-                            name="localTripType"
-                            value="RETURN"
-                            checked={form.tripType === 'RETURN'}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, tripType: 'RETURN' }))
-                            }
-                          />
-                          Return
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="segment">
-                      <label>
-                        {form.tripType === 'ONE_WAY'
-                          ? 'Travel date'
-                          : 'Departure and return dates'}
-                      </label>
-                      <div className="dates-column">
-                        <label className="date-field">
-                          <input
-                            type="date"
-                            name="startDate"
-                            value={form.startDate}
-                            onChange={handleChange}
-                            required
-                          />
-                        </label>
-                        {form.tripType === 'RETURN' && (
-                          <label className="date-field">
-                            <input
-                              type="date"
-                              name="endDate"
-                              value={form.endDate}
-                              onChange={handleChange}
-                              required
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-
                     <div className="segment">
                       <label>
                         {form.tripType === 'ONE_WAY'
